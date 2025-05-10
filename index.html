@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simulace optimalizace FVE pomocí těžby kryptoměn</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- React a ReactDOM -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <!-- Recharts -->
+  <script crossorigin src="https://unpkg.com/prop-types/prop-types.min.js"></script>
+  <script crossorigin src="https://unpkg.com/d3-scale@4.0.2/dist/d3-scale.min.js"></script>
+  <script crossorigin src="https://unpkg.com/d3-array@3.2.0/dist/d3-array.min.js"></script>
+  <script crossorigin src="https://unpkg.com/d3-color@3.1.0/dist/d3-color.min.js"></script>
+  <script crossorigin src="https://unpkg.com/d3-format@3.1.0/dist/d3-format.min.js"></script>
+  <script crossorigin src="https://unpkg.com/d3-interpolate@3.0.1/dist/d3-interpolate.min.js"></script>
+  <script crossorigin src="https://unpkg.com/d3-path@3.0.1/dist/d3-path.min.js"></script>
+  <script crossorigin src="https://unpkg.com/d3-shape@3.1.0/dist/d3-shape.min.js"></script>
+  <script crossorigin src="https://unpkg.com/d3-time@3.0.0/dist/d3-time.min.js"></script>
+  <script crossorigin src="https://unpkg.com/d3-time-format@4.1.0/dist/d3-time-format.min.js"></script>
+  <script crossorigin src="https://unpkg.com/recharts@2.5.0/umd/Recharts.min.js"></script>
+  <!-- Babel pro JSX -->
+  <script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    body {
+      background-color: #f5f5f5;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <!-- Data pro simulátor -->
+  <script>
+    // Předpřipravená data pro simulátor
+    const simulationData = {
+      totalProduction: 1447078.00,
+      totalConsumption: 1925474.50,
+      totalExport: 254976.75,
+      selfConsumption: 1192101.25,
+      selfConsumptionRatio: 82.38,
+      
+      // Předem vypočítané hodnoty pro různé počty minerů
+      minerResults: {
+        1: {
+          minerEnergyUsed: 11048.69,
+          remainingExport: 243928.06,
+          newSelfConsumptionRatio: 83.14,
+          hoursOfOperation: 2035.50,
+          utilizationRatio: 23.24,
+          investment: 42990,
+          monthlyIncome: 1591.55,
+          yearlyIncome: 19098.64,
+          paybackYears: 2.25,
+          comparison: 2957010.00
+        },
+        2: {
+          minerEnergyUsed: 21334.75,
+          remainingExport: 233642.00,
+          newSelfConsumptionRatio: 83.85,
+          hoursOfOperation: 2035.50,
+          utilizationRatio: 23.24,
+          investment: 85980,
+          monthlyIncome: 3183.11,
+          yearlyIncome: 38197.28,
+          paybackYears: 2.25,
+          comparison: 2914020.00
+        },
+        3: {
+          minerEnergyUsed: 30977.60,
+          remainingExport: 223999.15,
+          newSelfConsumptionRatio: 84.52,
+          hoursOfOperation: 2035.50,
+          utilizationRatio: 23.24,
+          investment: 128970,
+          monthlyIncome: 4774.66,
+          yearlyIncome: 57295.92,
+          paybackYears: 2.25,
+          comparison: 2871030.00
+        },
+        4: {
+          minerEnergyUsed: 40138.70,
+          remainingExport: 214838.05,
+          newSelfConsumptionRatio: 85.15,
+          hoursOfOperation: 2035.50,
+          utilizationRatio: 23.24,
+          investment: 171960,
+          monthlyIncome: 6366.21,
+          yearlyIncome: 76394.56,
+          paybackYears: 2.25,
+          comparison: 2828040.00
+        },
+        5: {
+          minerEnergyUsed: 48796.36,
+          remainingExport: 206180.39,
+          newSelfConsumptionRatio: 85.75,
+          hoursOfOperation: 2035.50,
+          utilizationRatio: 23.24,
+          investment: 214950,
+          monthlyIncome: 7957.77,
+          yearlyIncome: 95493.20,
+          paybackYears: 2.25,
+          comparison: 2785050.00
+        },
+        6: {
+          minerEnergyUsed: 57037.42,
+          remainingExport: 197939.33,
+          newSelfConsumptionRatio: 86.32,
+          hoursOfOperation: 2035.50,
+          utilizationRatio: 23.24,
+          investment: 257940,
+          monthlyIncome: 9549.32,
+          yearlyIncome: 114591.84,
+          paybackYears: 2.25,
+          comparison: 2742060.00
+        },
+        7: {
+          minerEnergyUsed: 64760.11,
+          remainingExport: 190216.64,
+          newSelfConsumptionRatio: 86.86,
+          hoursOfOperation: 2035.50,
+          utilizationRatio: 23.24,
+          investment: 300930,
+          monthlyIncome: 11140.87,
+          yearlyIncome: 133690.48,
+          paybackYears: 2.25,
+          comparison: 2699070.00
+        },
+        8: {
+          minerEnergyUsed: 71956.28,
+          remainingExport: 183020.47,
+          newSelfConsumptionRatio: 87.35,
+          hoursOfOperation: 2035.50,
+          utilizationRatio: 23.24,
+          investment: 343920,
+          monthlyIncome: 12732.43,
+          yearlyIncome: 152789.12,
+          paybackYears: 2.25,
+          comparison: 2656080.00
+        },
+        9: {
+          minerEnergyUsed: 78725.00,
+          remainingExport: 176251.75,
+          newSelfConsumptionRatio: 87.82,
+          hoursOfOperation: 2035.50,
+          utilizationRatio: 23.24,
+          investment: 386910,
+          monthlyIncome: 14323.98,
+          yearlyIncome: 171887.76,
+          paybackYears: 2.25,
+          comparison: 2613090.00
+        },
+        10: {
+          minerEnergyUsed: 85022.84,
+          remainingExport: 169953.91,
+          newSelfConsumptionRatio: 88.26,
+          hoursOfOperation: 2035.50,
+          utilizationRatio: 23.24,
+          investment: 429900,
+          monthlyIncome: 15915.53,
+          yearlyIncome: 190986.40,
+          paybackYears: 2.25,
+          comparison: 2570100.00
+        },
+        11: {
+          minerEnergyUsed: 90846.77,
+          remainingExport: 164129.98,
+          newSelfConsumptionRatio: 88.68,
+          hoursOfOperation: 2035.50,
+          utilizationRatio: 23.24,
+          investment: 472890,
+          monthlyIncome: 17507.09,
+          yearlyIncome: 210085.04,
+          paybackYears: 2.25,
+          comparison: 2527110.00
+        },
+        12: {
+          minerEnergyUsed: 96142.59,
+          remainingExport: 158834.16,
+          newSelfConsumptionRatio: 89.06,
+          hoursOfOperation: 2035.50,
+          utilizationRatio: 23.24,
+          investment: 515880,
+          monthlyIncome: 19098.64,
+          yearlyIncome: 229183.68,
+          paybackYears: 2.25,
+          comparison: 2484120.00
+        },
+        13: {
+          minerEnergyUsed: 100924.16,
+          remainingExport: 154052.59,
+          newSelfConsumptionRatio: 89.40,
+          hoursOfOperation: 2035.50,
+          utilizationRatio: 23.24,
+          investment: 558870,
+          monthlyIncome: 20690.19,
+          yearlyIncome: 248282.32,
+          paybackYears: 2.25,
+          comparison: 2441130.00
+        },
+        14: {
+          minerEnergyUsed: 105205.36,
+          remainingExport: 149771.39,
+          newSelfConsumptionRatio: 89.71,
+          hoursOfOperation: 2035.50,
+          utilizationRatio: 23.24,
+          investment: 601860,
+          monthlyIncome: 22281.75,
+          yearlyIncome: 267380.96,
+          paybackYears: 2.25,
+          comparison: 2398140.00
+        },
+        15: {
+          minerEnergyUsed: 108999.02,
+          remainingExport: 145977.73,
+          newSelfConsumptionRatio: 89.98,
+          hoursOfOperation: 2035.50,
+          utilizationRatio: 23.24,
+          investment: 644850,
+          monthlyIncome: 23873.30,
+          yearlyIncome: 286479.60,
+          paybackYears: 2.25,
+          comparison: 2355150.00
+        },
+        16: {
+          minerEnergyUsed: 112305.58,
+          remainingExport: 142671.17,
+          newSelfConsumptionRatio: 90.20,
+          hoursOfOperation: 2035.50,
+          utilizationRatio: 23.24,
+          investment: 687840,
+          monthlyIncome: 25464.85,
+          yearlyIncome: 305578.24,
+          paybackYears: 2.25,
+          comparison: 2312160.00
+        },
+        17: {
+          minerEnergyUsed: 115158.45,
+          remainingExport: 139818.30,
+          newSelfConsumptionRatio: 90.40,
+          hoursOfOperation: 2035.50,
+          utilizationRatio: 23.24,
+          investment: 730830,
+          monthlyIncome: 27056.41,
+          yearlyIncome: 324676.88,
+          paybackYears: 2.25,
+          comparison: 2269170.00
+        },
+        18: {
+          minerEnergyUsed: 117558.53,
+          remainingExport: 137418.22,
+          newSelfConsumptionRatio: 90.57,
+          hoursOfOperation: 2035.50,
+          utilizationRatio: 23.24,
+          investment: 773820,
+          monthlyIncome: 28647.96,
+          yearlyIncome: 343775.52,
+          paybackYears: 2.25,
+          comparison: 2226180.00
+        },
+        19: {
+          minerEnergyUsed: 119588.52,
+          remainingExport: 135388.23,
+          newSelfConsumptionRatio: 90.71,
+          hoursOfOperation: 2035.50,
+          utilizationRatio: 23.24,
+          investment: 816810,
+          monthlyIncome: 30239.51,
+          yearlyIncome: 362874.16,
+          paybackYears: 2.25,
+          comparison: 2183190.00
+        },
+        20: {
+          minerEnergyUsed: 121297.73,
+          remainingExport: 133679.02,
+          newSelfConsumptionRatio: 90.83,
+          hoursOfOperation: 2035.50,
+          utilizationRatio: 23.24,
+          investment: 859800,
+          monthlyIncome: 31831.07,
+          yearlyIncome: 381972.80,
+          paybackYears: 2.25,
+          comparison: 2140200.00
+        }
+      },
+      
+      // Data pro distribuci přetoků (zjednodušená)
+      exportDistribution: [
+        {pretok: 1, cetnost: 484, hodiny: 121.0},
+        {pretok: 5, cetnost: 127, hodiny: 31.8},
+        {pretok: 10, cetnost: 95, hodiny: 23.8},
+        {pretok: 20, cetnost: 67, hodiny: 16.8},
+        {pretok: 30, cetnost: 61, hodiny: 15.3},
+        {pretok: 40, cetnost: 61, hodiny: 15.3},
+        {pretok: 50, cetnost: 58, hodiny: 14.5},
+        {pretok: 60, cetnost: 45, hodiny: 11.3},
+        {pretok: 70, cetnost: 36, hodiny: 9.0},
+        {pretok: 80, cetnost: 24, hodiny: 6.0},
+        {pretok: 90, cetnost: 15, hodiny: 3.8},
+        {pretok: 100, cetnost: 13, hodiny: 3.3}
+      ]
+    };
+  </script>
+
+  <!-- React aplikace -->
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+    const { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } = Recharts;
+
+    const formatNumber = (num, decimals = 2) => {
+      if (num === undefined || num === null) {
+        return '0';
+      }
+      try {
+        return num.toLocaleString('cs-CZ', {
+          minimumFractionDigits: decimals,
+          maximumFractionDigits: decimals
+        });
+      } catch (error) {
+        console.error('Error formatting number:', error);
+        return '0';
+      }
+    };
+
+    const EnergyOptimizationSimulator = () => {
+      const [numMiners, setNumMiners] = useState(4);
+      const [currentData, setCurrentData] = useState(simulationData.minerResults[4]);
+      
+      // Aktualizace dat při změně počtu minerů
+      useEffect(() => {
+        setCurrentData(simulationData.minerResults[numMiners]);
+      }, [numMiners]);
+      
+      // Generování dat pro koláčové grafy
+      const generatePieData = () => {
+        // Před optimalizací
+        const beforeData = [
+          { name: 'Vlastní spotřeba', value: simulationData.selfConsumption },
+          { name: 'Přetoky do sítě', value: simulationData.totalExport }
+        ];
+        
+        // Po optimalizaci
+        const afterData = [
+          { name: 'Vlastní spotřeba', value: simulationData.selfConsumption },
+          { name: 'Spotřeba minerů', value: currentData.minerEnergyUsed },
+          { name: 'Zbývající přetoky', value: currentData.remainingExport }
+        ];
+        
+        return { beforeData, afterData };
+      };
+      
+      const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
+      const pieData = generatePieData();
+      
+      // Výpočet minimálního počtu minerů pro dosažení 85% vlastní spotřeby
+      const requiredMiners = Object.entries(simulationData.minerResults)
+        .find(([miners, data]) => data.newSelfConsumptionRatio >= 85)?.[0] || 'N/A';
+      
+      return (
+        <div className="p-6 max-w-6xl mx-auto">
+          <h1 className="text-2xl font-bold mb-6">Simulace optimalizace FVE pomocí těžby kryptoměn</h1>
+          
+          {/* Základní informace */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div className="bg-white p-4 rounded shadow">
+              <h2 className="text-lg font-semibold mb-2">Výroba a spotřeba</h2>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="bg-blue-50 p-2 rounded">
+                  <div className="text-sm text-gray-600">Celková výroba</div>
+                  <div className="text-lg font-semibold">{formatNumber(simulationData.totalProduction)} kWh</div>
+                </div>
+                <div className="bg-red-50 p-2 rounded">
+                  <div className="text-sm text-gray-600">Celková spotřeba</div>
+                  <div className="text-lg font-semibold">{formatNumber(simulationData.totalConsumption)} kWh</div>
+                </div>
+                <div className="bg-green-50 p-2 rounded">
+                  <div className="text-sm text-gray-600">Vlastní spotřeba</div>
+                  <div className="text-lg font-semibold">{formatNumber(simulationData.selfConsumption)} kWh</div>
+                </div>
+                <div className="bg-yellow-50 p-2 rounded">
+                  <div className="text-sm text-gray-600">Přetoky do sítě</div>
+                  <div className="text-lg font-semibold">{formatNumber(simulationData.totalExport)} kWh</div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-white p-4 rounded shadow">
+              <h2 className="text-lg font-semibold mb-2">Vlastní spotřeba</h2>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="bg-blue-50 p-2 rounded">
+                  <div className="text-sm text-gray-600">Aktuální poměr</div>
+                  <div className="text-lg font-semibold">{formatNumber(simulationData.selfConsumptionRatio)}%</div>
+                </div>
+                <div className="bg-green-50 p-2 rounded">
+                  <div className="text-sm text-gray-600">Požadovaný poměr</div>
+                  <div className="text-lg font-semibold">85,00%</div>
+                </div>
+                <div className="bg-orange-50 p-2 rounded">
+                  <div className="text-sm text-gray-600">Min. počet minerů</div>
+                  <div className="text-lg font-semibold">{requiredMiners}</div>
+                </div>
+                <div className="bg-purple-50 p-2 rounded">
+                  <div className="text-sm text-gray-600">Dotace v ohrožení</div>
+                  <div className="text-lg font-semibold">3 000 000 Kč</div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-white p-4 rounded shadow">
+              <h2 className="text-lg font-semibold mb-2">Nastavení minerů</h2>
+              <div className="mb-3">
+                <label className="block text-sm mb-1">Počet Antminer S19 Pro Hydro</label>
+                <input
+                  type="range"
+                  min="1"
+                  max="20"
+                  value={numMiners}
+                  onChange={(e) => setNumMiners(parseInt(e.target.value))}
+                  className="w-full"
+                />
+                <div className="flex justify-between text-xs">
+                  <span>1</span>
+                  <span>{numMiners}</span>
+                  <span>20</span>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-2 mt-4">
+                <div className="bg-amber-50 p-2 rounded">
+                  <div className="text-sm text-gray-600">Spotřeba 1 mineru</div>
+                  <div className="text-lg font-semibold">5,428 kW</div>
+                </div>
+                <div className="bg-amber-50 p-2 rounded">
+                  <div className="text-sm text-gray-600">Cena 1 mineru</div>
+                  <div className="text-lg font-semibold">42 990 Kč</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Výsledky optimalizace */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <div className="bg-white p-4 rounded shadow">
+              <h2 className="text-lg font-semibold mb-3">Energetické toky s {numMiners} minery</h2>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-amber-50 p-2 rounded">
+                  <div className="text-sm text-gray-600">Spotřeba minerů</div>
+                  <div className="text-lg font-semibold">{formatNumber(currentData.minerEnergyUsed)} kWh</div>
+                </div>
+                <div className="bg-yellow-50 p-2 rounded">
+                  <div className="text-sm text-gray-600">Zbývající přetoky</div>
+                  <div className="text-lg font-semibold">{formatNumber(currentData.remainingExport)} kWh</div>
+                </div>
+                <div className="bg-blue-50 p-2 rounded">
+                  <div className="text-sm text-gray-600">Nový poměr</div>
+                  <div className="text-lg font-semibold">{formatNumber(currentData.newSelfConsumptionRatio)}%</div>
+                </div>
+                <div className="bg-blue-50 p-2 rounded">
+                  <div className="text-sm text-gray-600">Hodin provozu</div>
+                  <div className="text-lg font-semibold">{formatNumber(currentData.hoursOfOperation)} h</div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-white p-4 rounded shadow">
+              <h2 className="text-lg font-semibold mb-3">Ekonomická analýza</h2>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-red-50 p-2 rounded">
+                  <div className="text-sm text-gray-600">Investice do minerů</div>
+                  <div className="text-lg font-semibold">{formatNumber(currentData.investment)} Kč</div>
+                </div>
+                <div className="bg-orange-50 p-2 rounded">
+                  <div className="text-sm text-gray-600">Využití minerů</div>
+                  <div className="text-lg font-semibold">{formatNumber(currentData.utilizationRatio)}%</div>
+                </div>
+                <div className="bg-green-50 p-2 rounded">
+                  <div className="text-sm text-gray-600">Měsíční výnos</div>
+                  <div className="text-lg font-semibold">{formatNumber(currentData.monthlyIncome)} Kč</div>
+                </div>
+                <div className="bg-green-50 p-2 rounded">
+                  <div className="text-sm text-gray-600">Roční výnos</div>
+                  <div className="text-lg font-semibold">{formatNumber(currentData.yearlyIncome)} Kč</div>
+                </div>
+                <div className="bg-blue-50 p-2 rounded col-span-2">
+                  <div className="text-sm text-gray-600">Návratnost investice</div>
+                  <div className="text-lg font-semibold">{formatNumber(currentData.paybackYears)} let</div>
+                </div>
+              </div>
+              
+              <div className="mt-3 p-3 bg-indigo-50 rounded">
+                <div className="text-sm font-semibold mb-1">Srovnání s dotací:</div>
+                <div className="flex items-center">
+                  <div className={`text-lg font-bold ${currentData.comparison > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    {currentData.comparison > 0 ? 'VÝHODNÉ' : 'NEVÝHODNÉ'}
+                  </div>
+                  <div className="ml-2">
+                    (rozdíl {formatNumber(Math.abs(currentData.comparison))} Kč {currentData.comparison > 0 ? 'úspora' : 'navíc'})
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Grafy */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+            <div className="bg-white p-4 rounded shadow">
+              <h2 className="text-lg font-semibold mb-3">Analýza vlivu počtu minerů</h2>
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart
+                    data={Object.entries(simulationData.minerResults).map(([miners, data]) => ({
+                      miners: parseInt(miners),
+                      selfConsumptionRatio: data.newSelfConsumptionRatio,
+                      energyUsed: data.minerEnergyUsed
+                    }))}
+                    margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="miners" label={{ value: 'Počet minerů', position: 'insideBottom', offset: -5 }} />
+                    <YAxis yAxisId="left" label={{ value: 'Poměr vlastní spotřeby (%)', angle: -90, position: 'insideLeft' }} />
+                    <YAxis yAxisId="right" orientation="right" label={{ value: 'Spotřeba minerů (MWh)', angle: -90, position: 'insideRight' }} />
+                    <Tooltip formatter={(value, name) => {
+                      if (name === 'selfConsumptionRatio') return [formatNumber(value) + '%', 'Poměr vlastní spotřeby'];
+                      if (name === 'energyUsed') return [formatNumber(value / 1000) + ' MWh', 'Spotřeba minerů'];
+                      return [value, name];
+                    }} />
+                    <Legend />
+                    <Line yAxisId="left" type="monotone" dataKey="selfConsumptionRatio" name="Poměr vlastní spotřeby" stroke="#8884d8" activeDot={{ r: 8 }} />
+                    <Line yAxisId="right" type="monotone" dataKey="energyUsed" name="Spotřeba minerů" stroke="#82ca9d" />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+            
+            <div className="bg-white p-4 rounded shadow">
+              <h2 className="text-lg font-semibold mb-3">Rozložení spotřeby před a po optimalizaci</h2>
+              <div className="h-64 flex items-center justify-around">
+                <div className="w-1/2 h-full">
+                  <h3 className="text-center text-sm font-medium mb-2">Před optimalizací</h3>
+                  <ResponsiveContainer width="100%" height="90%">
+                    <PieChart>
+                      <Pie
+                        data={pieData.beforeData}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        outerRadius={80}
+                        fill="#8884d8"
+                        dataKey="value"
+                        label={({ name, percent }) => `${name}: ${percent ? (percent * 100).toFixed(1) : '0'}%`}
+                      >
+                        {pieData.beforeData.map((entry, index) => (
+                          <Cell key={`cell-before-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip formatter={(value) => [formatNumber(value) + ' kWh', '']} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+                
+                <div className="w-1/2 h-full">
+                  <h3 className="text-center text-sm font-medium mb-2">Po optimalizaci ({numMiners} minerů)</h3>
+                  <ResponsiveContainer width="100%" height="90%">
+                    <PieChart>
+                      <Pie
+                        data={pieData.afterData}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        outerRadius={80}
+                        fill="#8884d8"
+                        dataKey="value"
+                        label={({ name, percent }) => `${name}: ${percent ? (percent * 100).toFixed(1) : '0'}%`}
+                      >
+                        {pieData.afterData.map((entry, index) => (
+                          <Cell key={`cell-after-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip formatter={(value) => [formatNumber(value) + ' kWh', '']} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Distribuce přetoků */}
+          <div className="bg-white p-4 rounded shadow mb-6">
+            <h2 className="text-lg font-semibold mb-3">Distribuce přetoků do sítě</h2>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={simulationData.exportDistribution}
+                  margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="pretok" label={{ value: 'Velikost přetoku (kW)', position: 'insideBottom', offset: -5 }} />
+                  <YAxis label={{ value: 'Počet čtvrthodin', angle: -90, position: 'insideLeft' }} />
+                  <Tooltip formatter={(value, name) => {
+                    if (name === 'cetnost') return [value + ' čtvrthodin', 'Četnost'];
+                    if (name === 'hodiny') return [formatNumber(value) + ' hodin', 'Doba trvání'];
+                    return [value, name];
+                  }} />
+                  <Legend />
+                  <Bar dataKey="cetnost" name="Četnost" fill="#8884d8" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+          
+          {/* Závěry a doporučení */}
+          <div className="bg-white p-4 rounded shadow">
+            <h2 className="text-lg font-semibold mb-3">Závěry a doporučení</h2>
+            
+            <div className="space-y-4">
+              <div>
+                <h3 className="font-medium">Současný stav:</h3>
+                <p>
+                  Aktuální poměr vlastní spotřeby je <span className="font-semibold">{formatNumber(simulationData.selfConsumptionRatio)}%</span>, 
+                  což nesplňuje podmínku 85% pro zachování dotace.
+                </p>
+              </div>
+              
+              <div>
+                <h3 className="font-medium">Optimální řešení:</h3>
+                <p>
+                  Pro dosažení minimálně 85% vlastní spotřeby je potřeba nainstalovat alespoň <span className="font-semibold">{requiredMiners}</span> minerů.
+                  S tímto počtem minerů bude poměr vlastní spotřeby <span className="font-semibold">
+                    {formatNumber(simulationData.minerResults[requiredMiners]?.newSelfConsumptionRatio || 85)}%
+                  </span>.
+                </p>
+              </div>
+              
+              <div>
+                <h3 className="font-medium">Ekonomické zhodnocení:</h3>
+                <p>
+                  Investice do {requiredMiners} minerů činí <span className="font-semibold">
+                    {formatNumber(simulationData.minerResults[requiredMiners]?.investment || 0)} Kč</span>, 
+                  což je výrazně méně než potenciální ztráta dotace (3 000 000 Kč).
+                </p>
+                <p className="mt-1">
+                  Tyto minery budou v provozu pouze během přetoků, tedy přibližně <span className="font-semibold">
+                    {formatNumber(currentData.utilizationRatio)}%</span> času v roce. I při tomto omezeném provozu
+                  je odhadovaná návratnost investice přibližně <span className="font-semibold">
+                    {formatNumber(currentData.paybackYears)} let</span> pouze z výnosů těžby.
+                </p>
+              </div>
+              
+              <div>
+                <h3 className="font-medium">Energetické využití:</h3>
+                <p>
+                  Při instalaci {numMiners} minerů by bylo spotřebováno <span className="font-semibold">{formatNumber(currentData.minerEnergyUsed)} kWh</span> 
+                  přebytků energie ročně, což představuje <span className="font-semibold">
+                    {formatNumber(currentData.minerEnergyUsed / simulationData.totalExport * 100)}%</span> 
+                  současných přetoků do sítě.
+                </p>
+              </div>
+              
+              <div className="bg-green-50 p-3 rounded">
+                <h3 className="font-medium text-green-800">Finální doporučení:</h3>
+                <p className="text-green-800">
+                  Doporučujeme instalovat {requiredMiners} minerů Antminer S19 Pro Hydro pro dosažení požadovaného poměru vlastní spotřeby a zachování dotace.
+                  Toto řešení je ekonomicky výhodné a poskytuje rychlou návratnost investice.
+                </p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="text-center mt-6 text-gray-600 text-sm">
+            <p>Simulace vytvořena pomocí Claude © 2025</p>
+          </div>
+        </div>
+      );
+    };
+
+    // Renderování aplikace
+    ReactDOM.render(
+      <EnergyOptimizationSimulator />,
+      document.getElementById('root')
+    );
+  </script>
+</body>
+</html>
